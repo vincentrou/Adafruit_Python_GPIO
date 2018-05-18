@@ -71,11 +71,8 @@ def pi_revision():
             if match and match.group(1) in ['0000', '0002', '0003']:
                 # Return revision 1 if revision ends with 0000, 0002 or 0003.
                 return 1
-            elif match:
-                # Assume revision 2 if revision ends with any other 4 chars.
-                return 2
-        # Couldn't find the revision, throw an exception.
-        raise RuntimeError('Could not determine Raspberry Pi revision.')
+    # Assume revision 2 if revision ends with any other 4 chars.
+    return 2
 
 
 def pi_version():
@@ -88,23 +85,14 @@ def pi_version():
     # 2709 is pi 2
     # 2835 is pi 3 on 4.9.x kernel
     # Anything else is not a pi.
-    with open('/proc/cpuinfo', 'r') as infile:
+    with open('/proc/device-tree/model', 'r') as infile:
         cpuinfo = infile.read()
     # Match a line like 'Hardware   : BCM2709'
-    match = re.search('^Hardware\s+:\s+(\w+)$', cpuinfo,
+    match = re.search('.*Raspberry.*', cpuinfo,
                       flags=re.MULTILINE | re.IGNORECASE)
     if not match:
         # Couldn't find the hardware, assume it isn't a pi.
         return None
-    if match.group(1) == 'BCM2708':
-        # Pi 1
-        return 1
-    elif match.group(1) == 'BCM2709':
-        # Pi 2
-        return 2
-    elif match.group(1) == 'BCM2835':
+    else:
         # Pi 3 / Pi on 4.9.x kernel
         return 3
-    else:
-        # Something else, not a pi.
-        return None
